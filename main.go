@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 	"log/slog"
 	"net"
+	"strconv"
 )
 
 
@@ -16,6 +17,8 @@ type Server struct{
 	Peers map[*Peer]bool
 	ln net.Listener
 	addpeerch chan *Peer
+	stopchannel chan struct{}
+	msgchannel chan string
 }
 func NewConfig(port int)Config{
 	return  Config{
@@ -28,27 +31,39 @@ func NewServer(config Config ) *Server{
 		Config: config,
 		Peers: make(map[*Peer]bool),
 		addpeerch: make(chan *Peer, 100), 
+		stopchannel: make(chan struct{}),
+		msgchannel: make(chan string, 100),
 	}
 }
-func (s *Server) loop() error{
+func (s *Server) loop() {
 	for {
 		select {
+		case <-s.stopchannel:
+			slog.Info("Stopping server...")
+			// for peer := range s.Peers {
+			// 	slog.Info("Closing peer connection", "peer", peer)
+				
+			// }
+			return 
 		case peer := <-s.addpeerch:
 			s.Peers[peer] = true
 			slog.Info("New peer added", "peer", peer)
-	    default:
-			fmt.Println(" mjnoun nta za3ma")
+
 
 		}
 	}
 }
 func (s *Server) Start() error {
-	ln,err:=net.Listen("tcp", ":"+string(s.Config.Port))
+	ln,err:=net.Listen("tcp", ":"+strconv.Itoa(s.Config.Port))
 	if err !=nil {
 		slog.Info("Failed to start server", "error", err)
 		return  err
 	}
+
 	s.ln= ln
+
+	go s.loop()
+	slog.Info("Server started", "port", s.Config.Port)
 	return s.acceptloop()
 	
 }
@@ -59,12 +74,13 @@ func (s *Server) acceptloop() error {
 			slog.Error("Failed to accept connection", "error", err)
 			continue
 		}
+		slog.Info("Accepted new connection", "remote_addr", conn.RemoteAddr())
 		go s.handleConnection(conn)
 	}
 }
 
 func (s *Server) handleConnection(conn net.Conn){
- peers := NewPeer(&conn)
+ peers := NewPeer(&conn, s.msgchannel)
  s.addpeerch <- peers
  slog.Debug("raw ja jdid")
  peers.Reedloop()
@@ -72,7 +88,7 @@ func (s *Server) handleConnection(conn net.Conn){
 }
 func main (){
 	slog.Info("Starting server...")
-	server:= NewServer(NewConfig(8080))
+	server:= NewServer(NewConfig(8085))
 	if err := server.Start(); err != nil {
 		slog.Error("Failed to start server", "error", err)
 	}
