@@ -64,9 +64,18 @@ func (s *Server) acceptloop() error {
 }
 
 func (s *Server) handleConnection(conn net.Conn){
+ peers := NewPeer(&conn)
+ s.addpeerch <- peers
+ slog.Debug("raw ja jdid")
+ peers.Reedloop()
 
 }
 func main (){
 	slog.Info("Starting server...")
+	server:= NewServer(NewConfig(8080))
+	if err := server.Start(); err != nil {
+		slog.Error("Failed to start server", "error", err)
+	}
 }
+
 
