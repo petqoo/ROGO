@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"net"
 )
@@ -14,6 +15,7 @@ type Server struct{
 	Config Config
 	Peers map[*Peer]bool
 	ln net.Listener
+	addpeerch chan *Peer
 }
 func NewConfig(port int)Config{
 	return  Config{
@@ -24,7 +26,20 @@ func NewConfig(port int)Config{
 func NewServer(config Config ) *Server{
 	return &Server{
 		Config: config,
-		Peers: make([]*Peer, 0),
+		Peers: make(map[*Peer]bool),
+		addpeerch: make(chan *Peer, 100), 
+	}
+}
+func (s *Server) loop() error{
+	for {
+		select {
+		case peer := <-s.addpeerch:
+			s.Peers[peer] = true
+			slog.Info("New peer added", "peer", peer)
+	    default:
+			fmt.Println(" mjnoun nta za3ma")
+
+		}
 	}
 }
 func (s *Server) Start() error {
