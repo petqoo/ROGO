@@ -38,6 +38,8 @@ func NewServer(config Config ) *Server{
 func (s *Server) loop() {
 	for {
 		select {
+		case msg := <-s.msgchannel:
+			slog.Info("Received message", "message", msg)
 		case <-s.stopchannel:
 			slog.Info("Stopping server...")
 			// for peer := range s.Peers {
