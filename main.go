@@ -1,6 +1,9 @@
 package main
 
-import "net"
+import (
+	"log/slog"
+	"net"
+)
 
 
 type Config struct{
@@ -9,6 +12,7 @@ type Config struct{
 
 type Server struct{
 	Config Config
+	Peers map[*Peer]bool
 	ln net.Listener
 }
 func NewConfig(port int)Config{
@@ -20,17 +24,34 @@ func NewConfig(port int)Config{
 func NewServer(config Config ) *Server{
 	return &Server{
 		Config: config,
+		Peers: make([]*Peer, 0),
 	}
 }
 func (s *Server) Start() error {
 	ln,err:=net.Listen("tcp", ":"+string(s.Config.Port))
 	if err !=nil {
+		slog.Info("Failed to start server", "error", err)
 		return  err
 	}
 	s.ln= ln
-	return nil
+	return s.acceptloop()
 	
 }
-func (s *Server) Runloop(
-	hey,err:= 
-)
+func (s *Server) acceptloop() error {
+	for {
+		conn,err:= s.ln.Accept()
+		if err != nil {
+			slog.Error("Failed to accept connection", "error", err)
+			continue
+		}
+		go s.handleConnection(conn)
+	}
+}
+
+func (s *Server) handleConnection(conn net.Conn){
+
+}
+func main (){
+	slog.Info("Starting server...")
+}
+
