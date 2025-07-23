@@ -50,10 +50,10 @@ func (s *Server) loop() {
 			slog.Info("Received message", "message", msg)
 		case <-s.stopchannel:
 			slog.Info("Stopping server...")
-			// for peer := range s.Peers {
-			// 	slog.Info("Closing peer connection", "peer", peer)
-				
-			// }
+			for peer := range s.Peers {
+				peer.delpeerch <- peer
+				slog.Info("Closing peer connection", "peer", peer)
+				}
 			return 
 		case peer := <-s.addpeerch:
 			s.Peers[peer] = true
