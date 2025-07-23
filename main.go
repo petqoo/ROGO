@@ -19,6 +19,7 @@ type Server struct{
 	addpeerch chan *Peer
 	stopchannel chan struct{}
 	msgchannel chan string
+    cmdchann chan SetCommand
 }
 func NewConfig(port int)Config{
 	return  Config{
@@ -33,6 +34,7 @@ func NewServer(config Config ) *Server{
 		addpeerch: make(chan *Peer, 100), 
 		stopchannel: make(chan struct{}),
 		msgchannel: make(chan string, 100),
+		cmdchann: make(chan SetCommand,100),
 	}
 }
 func (s *Server) loop() {
@@ -82,7 +84,7 @@ func (s *Server) acceptloop() error {
 }
 
 func (s *Server) handleConnection(conn net.Conn){
- peers := NewPeer(&conn, s.msgchannel)
+ peers := NewPeer(&conn, s.msgchannel,s.cmdchann)
  s.addpeerch <- peers
  slog.Debug("raw ja jdid")
  peers.Reedloop()

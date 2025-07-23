@@ -8,11 +8,11 @@ type Peer struct {
 	cmdcha chan  SetCommand
 }
 
-func NewPeer(conn *net.Conn, msgch chan string) *Peer {
+func NewPeer(conn *net.Conn, msgch chan string, cmdch chan SetCommand) *Peer {
 	return &Peer{
 		conn: conn,
 		msgch: msgch,
-		cmdcha: make(chan SetCommand, 100),
+		cmdcha: cmdch,
 	}
 }
 func(p *Peer) Reedloop(){
