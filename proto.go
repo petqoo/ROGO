@@ -17,6 +17,10 @@ type SetCommand struct {
 	Value string
 	Peer *Peer
 }
+type Getcommand struct {
+	Key string
+	Peer *Peer
+}
 
 func parseCommand(raw string) (Command, error) {
 	rd := resp.NewReader(bytes.NewBufferString(raw))
@@ -45,9 +49,18 @@ func parseCommand(raw string) (Command, error) {
 		if len(arr) != 3 {
 			return nil, fmt.Errorf("invalid SET command: expected 3 arguments, got %d", len(arr))
 		}
+	
 		cmd := SetCommand{
 			Key:   arr[1].String(),
 			Value: arr[2].String(),
+		}
+		return &cmd, nil
+    case GetCommand:
+		if len(arr) != 2 {
+			return nil, fmt.Errorf("invalid GET command: expected 2 arguments, got %d", len(arr))
+		}
+		cmd := Getcommand{
+			Key: arr[1].String(),
 		}
 		return &cmd, nil
 

@@ -63,7 +63,20 @@ func (s *Server) loop() {
 			case *SetCommand:
 				slog.Info("Processing SET command", "key", cmd.Key, "value", cmd.Value)
 				s.handleSetCommand(cmd)
+			case *Getcommand:
+				slog.Info("Processing GET command", "key", cmd.Key)
+				s.mu.RLock()
+				value, exists := s.data[cmd.Key]
+				s.mu.RUnlock()
+				if exists {
+					(*cmd.Peer.conn).Write([]byte("VALUE " + cmd.Key + " " + string(value) + "\n"))
+					slog.Info("Value retrieved", "key", cmd.Key, "value", string(value))
+				} else {
+					(*cmd.Peer.conn).Write([]byte("NOT_FOUND\n"))
+					slog.Info("Key not found", "key", cmd.Key)
+				}
 			}
+
 		}
 	}
 }
