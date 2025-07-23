@@ -30,7 +30,22 @@ func(p *Peer) Reedloop(){
 				println("Error parsing command:", err.Error())
 				continue
 			}
-			cmd.(*SetCommand).Peer=p
+			if cmd == nil {
+				println("ml79ni wal0")
+				continue
+			}
+			//type assertion khra
+			switch cmd.(type) {
+			case *Getcommand:
+				println("Received GET command")
+				cmd.(*Getcommand).Peer = p
+			case *SetCommand:
+				println("Received SET command")
+				cmd.(*SetCommand).Peer=p
+			default:
+				println("Unknown command type")
+			}
+			
 			p.cmdcha <-cmd
 			
 			println("Parsed command:", cmd)
