@@ -23,6 +23,7 @@ type Server struct{
     cmdchann chan Command
 	mu   sync.RWMutex
 	data map[string][]byte
+	delpeerch chan *Peer
 }
 func NewConfig(port int)Config{
 	return  Config{
@@ -39,6 +40,7 @@ func NewServer(config Config ) *Server{
 		msgchannel: make(chan string, 100),
 		cmdchann: make(chan Command,100),
 		data: make(map[string][]byte),
+		delpeerch: make(chan *Peer, 100),
 	}
 }
 func (s *Server) loop() {
@@ -56,7 +58,17 @@ func (s *Server) loop() {
 		case peer := <-s.addpeerch:
 			s.Peers[peer] = true
 			slog.Info("New peer added", "peer", peer)
-
+        case peer := <-s.delpeerch:
+			s.mu.Lock()
+			if _, exists := s.Peers[peer]; exists {
+				slog.Info("Removing peer", "peer", peer)
+				delete(s.Peers, peer)
+				(*peer.conn).Close()
+				slog.Info("Peer connection closed", "peer", peer)
+			} else {
+				slog.Info("Peer not found for removal", "peer", peer)
+			}
+			s.mu.Unlock()
         case cmd := <-s.cmdchann:
 			slog.Info("Received command", "command", cmd)
 			switch cmd := cmd.(type) {
@@ -114,7 +126,7 @@ func (s *Server) acceptloop() error {
 }
 
 func (s *Server) handleConnection(conn net.Conn){
- peers := NewPeer(&conn, s.msgchannel,s.cmdchann)
+ peers := NewPeer(&conn, s.msgchannel,s.cmdchann, s.delpeerch)
  s.addpeerch <- peers
  slog.Debug("raw ja jdid")
  peers.Reedloop()

@@ -1,18 +1,23 @@
 package main
 
-import "net"
+import (
+	"io"
+	"net"
+)
 
 type Peer struct {
 	conn *net.Conn
 	msgch chan string
 	cmdcha chan  Command
+	delpeerch chan *Peer
 }
 
-func NewPeer(conn *net.Conn, msgch chan string, cmdch chan Command) *Peer {
+func NewPeer(conn *net.Conn, msgch chan string, cmdch chan Command,delpeerch chan *Peer) *Peer {
 	return &Peer{
 		conn: conn,
 		msgch: msgch,
 		cmdcha: cmdch,
+		delpeerch: delpeerch,
 	}
 }
 func(p *Peer) Reedloop(){
@@ -20,7 +25,12 @@ func(p *Peer) Reedloop(){
 		buf := make([]byte, 1024)
 		n, err := (*p.conn).Read(buf)
 		if err != nil {
+			if err==io.EOF{
+				println("Connection closed by peer")				
+			}
+			p.delpeerch <- p
 			return
+			
 		}
 		if n > 0 {
 			data := buf[:n]
