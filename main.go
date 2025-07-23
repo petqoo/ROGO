@@ -60,18 +60,18 @@ func (s *Server) loop() {
         case cmd := <-s.cmdchann:
 			slog.Info("Received command", "command", cmd)
 			switch cmd := cmd.(type) {
-			case SetCommand:
+			case *SetCommand:
 				slog.Info("Processing SET command", "key", cmd.Key, "value", cmd.Value)
-				s.handleSetCommand(cmd,cmd.peer)
+				s.handleSetCommand(cmd)
 			}
 		}
 	}
 }
-func (s *Server) handleSetCommand(cmd SetCommand, p *Peer) {
+func (s *Server) handleSetCommand(cmd *SetCommand) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.data[cmd.Key] = []byte(cmd.Value)
-	(*p.conn).Write([]byte("OK\n"))
+	(*cmd.Peer.conn).Write([]byte("OK\n"))
 	slog.Info("Data stored", "key", cmd.Key)
 }
 func (s *Server) Start() error {

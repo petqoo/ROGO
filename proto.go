@@ -15,7 +15,7 @@ const (
 type SetCommand struct {
 	Key   string
 	Value string
-	peer *Peer
+	Peer *Peer
 }
 
 func parseCommand(raw string) (Command, error) {
@@ -49,7 +49,7 @@ func parseCommand(raw string) (Command, error) {
 			Key:   arr[1].String(),
 			Value: arr[2].String(),
 		}
-		return cmd, nil
+		return &cmd, nil
 
 	//  GET command
 	default:

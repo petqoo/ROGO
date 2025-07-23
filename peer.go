@@ -30,7 +30,7 @@ func(p *Peer) Reedloop(){
 				println("Error parsing command:", err.Error())
 				continue
 			}
-			cmd.(*SetCommand).peer=p
+			cmd.(*SetCommand).Peer=p
 			p.cmdcha <-cmd
 			
 			println("Parsed command:", cmd)
