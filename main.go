@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net"
 	"strconv"
+	"sync"
 )
 
 
@@ -20,6 +21,8 @@ type Server struct{
 	stopchannel chan struct{}
 	msgchannel chan string
     cmdchann chan Command
+	mu   sync.RWMutex
+	data map[string][]byte
 }
 func NewConfig(port int)Config{
 	return  Config{
@@ -35,6 +38,7 @@ func NewServer(config Config ) *Server{
 		stopchannel: make(chan struct{}),
 		msgchannel: make(chan string, 100),
 		cmdchann: make(chan Command,100),
+		data: make(map[string][]byte),
 	}
 }
 func (s *Server) loop() {
@@ -58,9 +62,17 @@ func (s *Server) loop() {
 			switch cmd := cmd.(type) {
 			case SetCommand:
 				slog.Info("Processing SET command", "key", cmd.Key, "value", cmd.Value)
+				s.handleSetCommand(cmd,cmd.peer)
 			}
 		}
 	}
+}
+func (s *Server) handleSetCommand(cmd SetCommand, p *Peer) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.data[cmd.Key] = []byte(cmd.Value)
+	(*p.conn).Write([]byte("OK\n"))
+	slog.Info("Data stored", "key", cmd.Key)
 }
 func (s *Server) Start() error {
 	ln,err:=net.Listen("tcp", ":"+strconv.Itoa(s.Config.Port))

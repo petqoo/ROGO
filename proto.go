@@ -15,6 +15,7 @@ const (
 type SetCommand struct {
 	Key   string
 	Value string
+	peer *Peer
 }
 
 func parseCommand(raw string) (Command, error) {
