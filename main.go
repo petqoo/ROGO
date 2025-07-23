@@ -19,7 +19,7 @@ type Server struct{
 	addpeerch chan *Peer
 	stopchannel chan struct{}
 	msgchannel chan string
-    cmdchann chan SetCommand
+    cmdchann chan Command
 }
 func NewConfig(port int)Config{
 	return  Config{
@@ -34,7 +34,7 @@ func NewServer(config Config ) *Server{
 		addpeerch: make(chan *Peer, 100), 
 		stopchannel: make(chan struct{}),
 		msgchannel: make(chan string, 100),
-		cmdchann: make(chan SetCommand,100),
+		cmdchann: make(chan Command,100),
 	}
 }
 func (s *Server) loop() {
@@ -53,7 +53,12 @@ func (s *Server) loop() {
 			s.Peers[peer] = true
 			slog.Info("New peer added", "peer", peer)
 
-
+        case cmd := <-s.cmdchann:
+			slog.Info("Received command", "command", cmd)
+			switch cmd := cmd.(type) {
+			case SetCommand:
+				slog.Info("Processing SET command", "key", cmd.Key, "value", cmd.Value)
+			}
 		}
 	}
 }

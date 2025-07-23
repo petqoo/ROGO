@@ -5,10 +5,10 @@ import "net"
 type Peer struct {
 	conn *net.Conn
 	msgch chan string
-	cmdcha chan  SetCommand
+	cmdcha chan  Command
 }
 
-func NewPeer(conn *net.Conn, msgch chan string, cmdch chan SetCommand) *Peer {
+func NewPeer(conn *net.Conn, msgch chan string, cmdch chan Command) *Peer {
 	return &Peer{
 		conn: conn,
 		msgch: msgch,
@@ -30,7 +30,7 @@ func(p *Peer) Reedloop(){
 				println("Error parsing command:", err.Error())
 				continue
 			}
-			p.cmdcha <-cmd.( SetCommand)
+			p.cmdcha <-cmd
 			println("Parsed command:", cmd)
 		}
 	}
