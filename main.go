@@ -49,14 +49,19 @@ func (s *Server) loop() {
 		case msg := <-s.msgchannel:
 			slog.Info("Received message", "message", msg)
 		case <-s.stopchannel:
-			slog.Info("Stopping server...")
+			s.mu.RLock()
 			for peer := range s.Peers {
 				peer.delpeerch <- peer
 				slog.Info("Closing peer connection", "peer", peer)
-				}
-			return 
+			}
+			s.mu.RUnlock()
+			slog.Info("Stopping server...")
+			return
+
 		case peer := <-s.addpeerch:
+			s.mu.Lock()
 			s.Peers[peer] = true
+			s.mu.Unlock()
 			slog.Info("New peer added", "peer", peer)
         case peer := <-s.delpeerch:
 			s.mu.Lock()
